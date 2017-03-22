@@ -25,7 +25,7 @@ class NStepMethodBase(metaclass=abc.ABCMeta):
     """
     def epsilon_greedy_probability(self, A, S):
         greedy_action = np.argmax(self.action_value_function.action_values(S))
-        epsilon_fraction = self.epsilon / self.env.action_space
+        epsilon_fraction = self.epsilon / self.env.action_space.n
         return 1 - self.epsilon + epsilon_fraction if A == greedy_action else epsilon_fraction
 
     """
