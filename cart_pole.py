@@ -2,14 +2,16 @@ import numpy as np
 import gym
 import abc
 from gym.envs.registration import register
+
+from q_learning import Qlearning
 from sarsa import Sarsa
 from q_sigma import QSigma
-from function_approximation_action_value_function import FunctionApproximationActionValueFunction
+from tile_coding_action_value_function import TileCodingActionValueFunction
 
 register(
     id='MountainCar-v3',
     entry_point='gym.envs.classic_control:MountainCarEnv',
-    max_episode_steps=200,
+    max_episode_steps=20000,
     reward_threshold=-110.0,
 )
 env = gym.make('MountainCar-v3')
@@ -70,14 +72,18 @@ class FixedSigma(AbsractSigma):
         return self.val
 
 
-num_episodes = 10000
+num_episodes = 500
 
-Q = FunctionApproximationActionValueFunction(env.observation_space.shape[0], dim_ranges, env.action_space.n,
-                                             num_tiles=2048, num_tilings=8, scale_inputs=True)
-qsigma = QSigma(env, 0.3 / Q.num_tilings, 0.0, 8, 1, Q, FixedSigma(0))
+Q = TileCodingActionValueFunction(env.observation_space.shape[0], dim_ranges, env.action_space.n,
+                                  num_tiles=2048, num_tilings=8, scale_inputs=True)
+qsigma = Qlearning(env, 0.4 / Q.num_tilings, 0.1, 1, Q)
 qsigma.do_learning(num_episodes, show_env=False)
 print("Mean: ", np.mean(qsigma.episode_return))
 episodes_completed = np.size(qsigma.episode_return)
+# qsigma = QSigma(env, 0.3 / Q.num_tilings, 0.0, 8, 1, Q, FixedSigma(0))
+# qsigma.do_learning(num_episodes, show_env=False)
+# print("Mean: ", np.mean(qsigma.episode_return))
+# episodes_completed = np.size(qsigma.episode_return)
 print("Last 100 Episodes window: ", np.mean(qsigma.episode_return[episodes_completed - 100:episodes_completed]))
 print("Total episodes: ", np.size(qsigma.episode_return))
 print("Total time steps: ", -1*np.sum(qsigma.episode_return))

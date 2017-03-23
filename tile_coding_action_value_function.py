@@ -4,7 +4,7 @@ import numpy as np
 import random
 
 
-class FunctionApproximationActionValueFunction(AbstractActionValueFunction):
+class TileCodingActionValueFunction(AbstractActionValueFunction):
 
     def __init__(self, num_dimensions, dimension_ranges, num_actions, num_tiles=2048, num_tilings=8, scale_inputs=True):
         self.scale_inputs = scale_inputs
