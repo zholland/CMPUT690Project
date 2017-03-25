@@ -6,13 +6,14 @@ import random
 
 class TileCodingActionValueFunction(AbstractActionValueFunction):
 
-    def __init__(self, num_dimensions, dimension_ranges, num_actions, num_tiles=2048, num_tilings=8, scale_inputs=True):
+    def __init__(self, num_dimensions, dimension_ranges, num_actions, num_tiles=2048, num_tilings=8, scale_inputs=False):
         self.scale_inputs = scale_inputs
         self.num_tiles = num_tiles
         self.num_dimensions = num_dimensions
         self.dimension_ranges = dimension_ranges
         self.num_actions = num_actions
         self.theta = [-0.001 * random.random() for _ in range(self.num_tiles*num_actions)]
+        self.theta = np.asarray(self.theta)
         self.iht = tiles3.IHT(self.num_tiles)
         self.num_tilings = num_tilings
 
@@ -27,6 +28,14 @@ class TileCodingActionValueFunction(AbstractActionValueFunction):
 
     def get_phi(self, S):
         return tiles3.tiles(self.iht, self.num_tilings, self.get_inputs(S))
+
+    def feature_vector(self, S, A):
+        psi = np.zeros([self.num_tiles*self.num_actions])
+        indicies = tiles3.tiles(self.iht, self.num_tilings, self.get_inputs(S))
+        for idx in indicies:
+            psi[self.num_tiles*A+idx] = 1
+        return psi
+
 
     def action_values(self, S):
         sums = np.zeros([self.num_actions])
