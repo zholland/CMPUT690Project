@@ -36,7 +36,6 @@ class TileCodingActionValueFunction(AbstractActionValueFunction):
             psi[self.num_tiles*A+idx] = 1
         return psi
 
-
     def action_values(self, S):
         sums = np.zeros([self.num_actions])
         if S is not None:

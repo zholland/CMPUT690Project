@@ -20,7 +20,32 @@ class QEstimator:
         self.scope = scope
         # self.session = tf.InteractiveSession()
         with tf.variable_scope(scope):
-            self._create_model(learning_rate)
+            self._create_model_2(learning_rate, hidden_units_per_layer=128)
+
+    def _create_model_2(self, learning_rate=0.001, hidden_units_per_layer=4):
+        # Input
+        self.x = tf.placeholder(tf.float32, [None, self.state_dims])
+        self.a = tf.placeholder(tf.int32, [None, 1])
+
+        # Fully connected
+        fc_layer_1 = tf.contrib.layers.fully_connected(inputs=self.x, num_outputs=hidden_units_per_layer, activation_fn=tf.nn.relu)
+        fc_layer_2 = tf.contrib.layers.fully_connected(inputs=fc_layer_1, num_outputs=hidden_units_per_layer, activation_fn=tf.nn.relu)
+        self.y = tf.contrib.layers.fully_connected(inputs=fc_layer_2, num_outputs=self.num_actions, activation_fn=None)
+
+        # Get the predictions for the chosen actions only
+        gather_indices = tf.reshape(tf.range(self.update_batch_size) * self.num_actions,
+                                    [self.update_batch_size, 1]) + self.a
+        self.a_value_estimates = tf.reshape(
+            tf.gather(tf.reshape(self.y, [self.update_batch_size * self.num_actions, 1]), gather_indices),
+            [self.update_batch_size, 1])
+
+        # Target placeholder
+        self.y_ = tf.placeholder(tf.float32, [None, 1])
+
+        # Loss and optimizer
+        loss = tf.reduce_mean(tf.squared_difference(self.y_, self.a_value_estimates))
+        self.train_op = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(loss, global_step=tf.contrib.framework.get_global_step())
+        # self.train_op = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss, global_step=tf.contrib.framework.get_global_step())
 
     def _create_model(self, learning_rate=0.001):
         # Input

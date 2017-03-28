@@ -42,9 +42,10 @@ class TrueOnlineSarsaLambda(NStepMethodBase):
                 A = Anext
 
             self.epsilon *= self.epsilon_decay_factor
-            print(Rsum)
+            if episodeNum % 100 == 0:
+                print(episodeNum, ", alpha: ", self.alpha, "lambda: ", self.lambda_param, ":", Rsum)
             self.episode_return.append(Rsum)
-            if episodeNum >= 100 and np.mean(self.episode_return[episodeNum - 100:episodeNum]) > -110.0:
+            if episodeNum >= 100 and np.mean(self.episode_return[episodeNum - 100:episodeNum]) > 200.0:
                 break
 
 if __name__ == "__main__":
@@ -55,27 +56,27 @@ if __name__ == "__main__":
         reward_threshold=-110.0,
     )
 
-    env = gym.make('MountainCar-v3')
+    env = gym.make('LunarLander-v2')
 
     dim_ranges = [env.observation_space.high[i] - env.observation_space.low[i] for i in
                   range(0, env.observation_space.high.size)]
 
-    num_tilings = 8
+    num_tilings = 32
     action_value_function = TileCodingActionValueFunction(env.observation_space.shape[0],
                                                           dim_ranges,
                                                           env.action_space.n,
-                                                          num_tiles=2048,
+                                                          num_tiles=2**14,
                                                           num_tilings=num_tilings,
-                                                          scale_inputs=True)
+                                                          scale_inputs=False)
 
-    epsilon = 0.0
-    alpha = 0.3
+    epsilon = 0.1
+    alpha = 0.5
     t_o_sarsa_lambda = TrueOnlineSarsaLambda(env,
                                              alpha / num_tilings,
                                              epsilon,
-                                             1,
-                                             action_value_function,
-                                             epsilon_decay_factor=1.0,
+                                             gamma=1.0,
+                                             action_value_function=action_value_function,
+                                             epsilon_decay_factor=0.99,
                                              lambda_param=0.9)
 
     t_o_sarsa_lambda.do_learning(500, show_env=False)

@@ -78,7 +78,7 @@ if __name__ == "__main__":
         max_episode_steps=10000,
         reward_threshold=-110.0,
     )
-    env = gym.make('MountainCar-v3')
+    env = gym.make('MountainCar-v0')
     # env = gym.make('CartPole-v0')
     ## DQN for cart pole
     # dqn = DQN(
@@ -96,19 +96,19 @@ if __name__ == "__main__":
     # )
     ## DQN for mountain car
     dqn = DQN(
-        env=env,
-        alpha=None,
-        epsilon=0.0,
-        epsilon_decay_rate=0.98,
-        gamma=1,
-        reset_interval=16,
-        replay_mem_capacity=100000,
-        train_frequency=2,
-        replay_start_size=16,
-        update_batch_size=16,
-        learning_rate=0.001
+            env=env,
+            alpha=None,
+            epsilon=0.0,
+            epsilon_decay_rate=0.98,
+            gamma=1,
+            reset_interval=1024,
+            replay_mem_capacity=100000,
+            train_frequency=4,
+            replay_start_size=1024,
+            update_batch_size=8,
+            learning_rate=0.1
     )
-    dqn.do_learning(1000)
+    dqn.do_learning(500)
     episodes_completed = np.size(dqn.episode_return)
     print("Mean return: ", np.mean(dqn.episode_return))
     print("Last 100 Episodes window: ", np.mean(dqn.episode_return[episodes_completed - 100:episodes_completed]))
