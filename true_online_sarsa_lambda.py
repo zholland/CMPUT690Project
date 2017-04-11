@@ -44,9 +44,9 @@ class TrueOnlineSarsaLambda(NStepMethodBase):
             self.epsilon *= self.epsilon_decay_factor
             # if episodeNum != 0 and episodeNum % 100 == 0:
             #     print(episodeNum, ", alpha: ", self.alpha, "lambda: ", self.lambda_param, "100 episode window:", np.mean(self.episode_return[episodeNum - 100:episodeNum]))
-            print(Rsum)
+            # print(Rsum)
             self.episode_return.append(Rsum)
-            if episodeNum >= 100 and np.mean(self.episode_return[episodeNum - 100:episodeNum]) > -110.0:
+            if episodeNum >= 50 and np.mean(self.episode_return[episodeNum - 50:episodeNum]) > 195.0:
                 break
 
 if __name__ == "__main__":
@@ -57,47 +57,47 @@ if __name__ == "__main__":
         reward_threshold=-110.0,
     )
 
-    # env = gym.make('MountainCar-v0')
-    env = gym.make('Acrobot-v1')
+    env = gym.make('MountainCar-v0')
+    # env = gym.make('Acrobot-v1')
 
     dim_ranges = [env.observation_space.high[i] - env.observation_space.low[i] for i in
                   range(0, env.observation_space.high.size)]
 
-    num_tilings = 32
+    num_tilings = 8
     action_value_function = TileCodingActionValueFunction(env.observation_space.shape[0],
                                                           dim_ranges,
                                                           env.action_space.n,
-                                                          num_tiles=2**17,
+                                                          num_tiles=2**11,
                                                           num_tilings=num_tilings,
-                                                          scale_inputs=False)
+                                                          scale_inputs=True)
     ## For mountain car
-    # epsilon = 0.0
+    epsilon = 0.0
+    alpha = 0.9
+    t_o_sarsa_lambda = TrueOnlineSarsaLambda(env,
+                                             alpha / num_tilings,
+                                             epsilon,
+                                             gamma=1.0,
+                                             action_value_function=action_value_function,
+                                             epsilon_decay_factor=1.0,
+                                             lambda_param=0.875)
+    #
+
+    # epsilon = 0.2
     # alpha = 0.3
     # t_o_sarsa_lambda = TrueOnlineSarsaLambda(env,
     #                                          alpha / num_tilings,
     #                                          epsilon,
     #                                          gamma=1.0,
     #                                          action_value_function=action_value_function,
-    #                                          epsilon_decay_factor=0.99,
+    #                                          epsilon_decay_factor=0.98,
     #                                          lambda_param=0.9)
-    #
 
-    epsilon = 0.2
-    alpha = 0.3
-    t_o_sarsa_lambda = TrueOnlineSarsaLambda(env,
-                                             alpha / num_tilings,
-                                             epsilon,
-                                             gamma=1.0,
-                                             action_value_function=action_value_function,
-                                             epsilon_decay_factor=0.98,
-                                             lambda_param=0.9)
-
-    t_o_sarsa_lambda.do_learning(100, show_env=False)
+    t_o_sarsa_lambda.do_learning(1000, show_env=False)
     episodes_completed = np.size(t_o_sarsa_lambda.episode_return)
     print("****alpha: ", alpha, ", epsilon: ", epsilon, "*****")
     print("Mean return: ", np.mean(t_o_sarsa_lambda.episode_return))
-    print("Last 100 Episodes window: ", np.mean(t_o_sarsa_lambda.episode_return[episodes_completed - 100:episodes_completed]))
+    print("Last 10 Episodes window: ", np.mean(t_o_sarsa_lambda.episode_return[episodes_completed - 10:episodes_completed]))
     print("Total episodes: ", np.size(t_o_sarsa_lambda.episode_return))
     print("Total time steps: ", np.abs(np.sum(t_o_sarsa_lambda.episode_return)))
-    # t_o_sarsa_lambda.alpha = 0.0
-    # t_o_sarsa_lambda.do_learning(10, show_env=True)
+    t_o_sarsa_lambda.alpha = 0.0
+    t_o_sarsa_lambda.do_learning(10, show_env=True)

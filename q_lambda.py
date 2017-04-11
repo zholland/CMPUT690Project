@@ -8,9 +8,10 @@ from tile_coding_action_value_function import TileCodingActionValueFunction
 
 
 class Qlearning(NStepMethodBase):
-    def __init__(self, env, alpha, epsilon, gamma, action_value_function, epsilon_decay_factor=0.95):
+    def __init__(self, env, alpha, epsilon, gamma, action_value_function, epsilon_decay_factor=0.95, lambda_param=0.0):
         super().__init__(env, alpha, epsilon, 1, gamma, action_value_function)
         self.epsilon_decay_factor = epsilon_decay_factor
+        self.lambda_param = lambda_param
 
     def do_learning(self, num_episodes, show_env=False):
         for episodeNum in range(num_episodes):
@@ -23,7 +24,6 @@ class Qlearning(NStepMethodBase):
                     self.env.render()
                 Snext, R, done, info = self.env.step(A)
                 Rsum += R
-                # Anext = random.randint(0,2)
                 Anext = self.epsilon_greedy_action(Snext)
                 self.action_value_function.update(S, A, self.alpha * (
                 R + self.gamma * np.max(self.action_value_function.action_values(Snext)) - self.action_value_function.value(S,A)))
@@ -32,7 +32,7 @@ class Qlearning(NStepMethodBase):
             self.epsilon *= self.epsilon_decay_factor
             # print(Rsum)
             self.episode_return.append(Rsum)
-            if episodeNum >= 50 and np.mean(self.episode_return[episodeNum - 50:episodeNum]) > 195.0:
+            if episodeNum >= 100 and np.mean(self.episode_return[episodeNum - 100:episodeNum]) > -110.0:
                 break
 
 

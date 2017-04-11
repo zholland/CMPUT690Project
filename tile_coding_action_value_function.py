@@ -12,7 +12,8 @@ class TileCodingActionValueFunction(AbstractActionValueFunction):
         self.num_dimensions = num_dimensions
         self.dimension_ranges = dimension_ranges
         self.num_actions = num_actions
-        self.theta = [-0.001 * random.random() for _ in range(self.num_tiles*num_actions)]
+        self.theta = [0.001 * random.random() for _ in range(self.num_tiles*num_actions)]
+        # self.theta = [-0.001 * random.random() for _ in range(self.num_tiles*num_actions)]
         self.theta = np.asarray(self.theta)
         self.iht = tiles3.IHT(self.num_tiles)
         self.num_tilings = num_tilings
