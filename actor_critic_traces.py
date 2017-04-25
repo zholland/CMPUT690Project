@@ -1,7 +1,6 @@
 import gym
 import numpy as np
 from joblib import Parallel, delayed
-from gym.envs import register
 import pickle
 from actor_critic_tile_coding_parametrization import ActorCriticTileCodingParametrization
 from continuous_actor_critic_tile_coding import ContinuousActorCriticTileCoding
@@ -20,8 +19,8 @@ class ActorCriticEligibilityTraces:
         self.epsilon_decay = epsilon_decay
         self.time_steps = []
 
-    def do_learning(self, num_episodes, show_env=False):
-        epsilon = 0.0
+    def do_learning(self, num_episodes, show_env=False, target_reward=90.0, target_window=10):
+        epsilon = 1.0
         for episodeNum in range(num_episodes):
             S = self.env.reset()
             e_theta = np.zeros(self.parametrizations.theta.shape)
@@ -58,29 +57,30 @@ class ActorCriticEligibilityTraces:
                 S = Snext
 
             epsilon *= self.epsilon_decay
+            # print(Rsum)
             self.episode_return.append(Rsum)
             self.time_steps.append(t)
-            if episodeNum >= 10 and np.mean(self.episode_return[episodeNum - 10:episodeNum]) > 90.0:
+            if episodeNum >= target_window and np.mean(self.episode_return[episodeNum - target_window:episodeNum]) > target_reward:
                 break
 
 
-MAX_EPISODES = 1000
-NUM_RUNS = 100
-NUM_TILINGS = 8
+MAX_EPISODES = 50
+NUM_RUNS = 1
+NUM_TILINGS = 16
 
-TEST_ENV = "MountainCarContinuous-v0"
+TEST_ENV = "Pendulum-v0"
 
-NUM_PARLL_JOBS = 4
+NUM_PARLL_JOBS = 2
 
 # ALPHAS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 # ALPHAS = [0.6, 0.7, 0.8]
 # ALPHAS = [0.005]
-ALPHAS = [0.005]
-BETAS = [1.0]
+ALPHAS = [0.01, 0.1, 0.2]
+BETAS = [0.1, 0.2, 0.5]
 # ALPHAS = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
 # ALPHAS = [0.5]
-EPSILONS = [0.0]
-EPSILONS_DECAY = [1.0]
+EPSILONS = [1.0]
+EPSILONS_DECAY = [0.9]
 
 
 def tau_to_lambda(tau):
@@ -89,7 +89,7 @@ def tau_to_lambda(tau):
 
 # LAMBDA_PARAMS = tau_to_lambda(np.asarray([1, 2, 4, 8, 16, 32]))
 # LAMBDA_PARAMS = tau_to_lambda(np.asarray([1, 2, 4]))
-LAMBDA_PARAMS = tau_to_lambda(np.asarray([1]))
+LAMBDA_PARAMS = tau_to_lambda(np.asarray([1,2,4]))
 # LAMBDA_PARAMS = [0.0, 0.5, 0.9]
 # LAMBDA_PARAMS = [0, 0.5, 0.75, 0.8, 0.9, 0.95, 0.99, 0.999]
 # LAMBDA_PARAMS = [0.4, 0.5, 0.6]
@@ -125,7 +125,7 @@ def do_experiment(parameters):
         env.reset()
         parametrizations = ContinuousActorCriticTileCoding(env.observation_space.shape[0],
                                                        dim_ranges,
-                                                       num_tiles=2**11,
+                                                       num_tiles=2**14,
                                                        num_tilings=NUM_TILINGS,
                                                        scale_inputs=True)
 
@@ -137,12 +137,6 @@ def do_experiment(parameters):
                                                 lambda_theta=lambda_param,
                                                 lambda_w=lambda_param)
 
-        # algorithm = Qlearning(env,
-        #                       alpha / NUM_TILINGS,
-        #                       epsilon,
-        #                       1,
-        #                       action_value_function,
-        #                       epsilon_decay_factor=0.98)
 
         algorithm.do_learning(MAX_EPISODES, show_env=False)
 
@@ -170,17 +164,17 @@ def run_experiment():
     for reward_info in Parallel(n_jobs=NUM_PARLL_JOBS)(
             delayed(do_experiment)(parameters) for parameters in parameters_list):
         rewards_list.append(reward_info)
-    pickle.dump(rewards_list, open("continuous_mc_100_runs.p", "wb"))
+    pickle.dump(rewards_list, open("pendulum_100_runs.p", "wb"))
     return rewards_list
 
 
 def print_best_results(rewards_list):
     best_reward = None
     for reward_obj in rewards_list:
-        # if best_reward is None or np.mean(reward_obj.episodes_window) > np.mean(best_reward.episodes_window):
-        #     best_reward = reward_obj
-        if best_reward is None or np.mean(reward_obj.total_time_steps) < np.mean(best_reward.total_time_steps) and np.mean(reward_obj.episodes_window) > 90:
+        if best_reward is None or np.mean(reward_obj.episodes_window) > np.mean(best_reward.episodes_window):
             best_reward = reward_obj
+        # if best_reward is None or np.mean(reward_obj.total_time_steps) < np.mean(best_reward.total_time_steps) and np.mean(reward_obj.episodes_window) > 90:
+        #     best_reward = reward_obj
 
     print("Best algorithm: alpha: ", best_reward.alpha, "beta: ", best_reward.beta, ", epsilon: ", best_reward.epsilon, ", lambda: ",
           best_reward.lambda_param, ", eps_decay: ", best_reward.epsilon_decay)
@@ -205,10 +199,10 @@ def print_all_results(reward_file):
             print("Total time steps: ", np.mean(reward.total_time_steps), "+-", np.std(reward.total_time_steps) / np.sqrt(len(reward.total_time_steps)))
 
 if __name__ == "__main__":
-    rewards_list = run_experiment()
-    print_best_results(rewards_list)
+    # rewards_list = run_experiment()
+    # print_best_results(rewards_list)
     # print_all_results("/home/zach/PycharmProjects/CMPUT690Project/continuous_mc.p")
-    # print_best_results(rewards_list=pickle.load(open("/home/zach/PycharmProjects/CMPUT690Project/continuous_mc.p", "rb")))
+    print_best_results(rewards_list=pickle.load(open("/Users/zach/PycharmProjects/CMPUT690Project/continuous_mc_100_runs.p", "rb")))
     # register(
     #     id='MountainCar-v3',
     #     entry_point='gym.envs.classic_control:MountainCarEnv',

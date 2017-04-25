@@ -13,7 +13,7 @@ class TrueOnlineSarsaLambda(NStepMethodBase):
         self.epsilon_decay_factor = epsilon_decay_factor
         self.lambda_param = lambda_param
 
-    def do_learning(self, num_episodes, show_env=False):
+    def do_learning(self, num_episodes, show_env=False, target_reward=-110.0, target_window=10):
         for episodeNum in range(num_episodes):
             S = self.env.reset()
             A = self.epsilon_greedy_action(S)
@@ -42,11 +42,9 @@ class TrueOnlineSarsaLambda(NStepMethodBase):
                 A = Anext
 
             self.epsilon *= self.epsilon_decay_factor
-            # if episodeNum != 0 and episodeNum % 100 == 0:
-            #     print(episodeNum, ", alpha: ", self.alpha, "lambda: ", self.lambda_param, "100 episode window:", np.mean(self.episode_return[episodeNum - 100:episodeNum]))
             # print(Rsum)
             self.episode_return.append(Rsum)
-            if episodeNum >= 50 and np.mean(self.episode_return[episodeNum - 50:episodeNum]) > 195.0:
+            if episodeNum >= target_window and np.mean(self.episode_return[episodeNum - target_window:episodeNum]) > target_reward:
                 break
 
 if __name__ == "__main__":

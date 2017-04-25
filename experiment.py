@@ -149,7 +149,7 @@ def print_best_results(rewards_list):
     for reward_obj in rewards_list:
         # if best_reward is None or np.mean(reward_obj.episodes_window) > np.mean(best_reward.episodes_window):
         #     best_reward = reward_obj
-        if best_reward is None or np.mean(reward_obj.total_time_steps) < np.mean(best_reward.total_time_steps) and np.mean(reward_obj.episodes_window) > 195.0:
+        if best_reward is None or np.mean(reward_obj.total_time_steps) < np.mean(best_reward.total_time_steps) and np.mean(reward_obj.episodes_window) > -110.0:
             best_reward = reward_obj
 
     print("Best algorithm: alpha: ", best_reward.alpha, ", epsilon: ", best_reward.epsilon, ", lambda: ",
@@ -180,5 +180,5 @@ if __name__ == "__main__":
     # rewards_list = run_experiment()
     # print_best_results(rewards_list)
     # print_all_results("/home/zach/PycharmProjects/CMPUT690Project/mc_rewards_list_100_runs.p")
-    print_best_results(rewards_list=pickle.load(open("/home/zach/PycharmProjects/CMPUT690Project/cart_pole_qlearn_rewards_list_100_runs.p", "rb")))
+    print_best_results(rewards_list=pickle.load(open("/Users/zach/PycharmProjects/CMPUT690Project/cart_pole_sarsa_rewards_list_100_runs_rerun.p", "rb")))
 

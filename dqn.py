@@ -78,7 +78,7 @@ if __name__ == "__main__":
         max_episode_steps=10000,
         reward_threshold=-110.0,
     )
-    env = gym.make('MountainCar-v0')
+    env = gym.make('LunarLander-v2')
     # env = gym.make('CartPole-v0')
     ## DQN for cart pole
     # dqn = DQN(
